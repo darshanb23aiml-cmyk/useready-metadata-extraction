@@ -1,4 +1,15 @@
-"""Per-field recall: exact matches / total documents."""
+"""Per-field evaluation.
+
+Definitions (per field, over documents that have a reference label):
+  Recall    = exact matches / documents                (the metric asked for in the assignment;
+                                                        a correctly empty field counts as a match)
+  Precision = correct non-empty answers / non-empty answers given
+              (an empty answer is "no answer", so it lowers recall but not precision)
+  F1        = 2 * Precision * Recall / (Precision + Recall)
+
+"strict" = exact string match after trimming spaces.
+"lenient" = also ignores letter case and repeated spaces.
+"""
 import pandas as pd
 
 from .schema import CSV_COLUMNS
@@ -20,18 +31,57 @@ def load_labels(*csv_paths) -> pd.DataFrame:
     return df.set_index("File Name")
 
 
+def _scores(correct: int, correct_nonempty: int, nonempty_preds: int, n: int):
+    recall = correct / n if n else 0.0
+    precision = correct_nonempty / nonempty_preds if nonempty_preds else 0.0
+    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) else 0.0
+    return round(recall, 3), round(precision, 3), round(f1, 3)
+
+
+def _count(pred, labels, files, col, norm):
+    correct = correct_nonempty = nonempty = 0
+    for f in files:
+        p, y = norm(pred.at[f, col]), norm(labels.at[f, col])
+        if p != "":
+            nonempty += 1
+        if p == y:
+            correct += 1
+            if p != "":
+                correct_nonempty += 1
+    return correct, correct_nonempty, nonempty
+
+
 def per_field_recall(pred: pd.DataFrame, labels: pd.DataFrame) -> pd.DataFrame:
     """pred: index = 'File Name', columns = CSV column names.
-    Returns a table with strict and lenient (case/space-insensitive) recall."""
-    common = [f for f in pred.index if f in labels.index]
+    Returns recall, precision and F1 per field (strict and lenient) plus an overall row."""
+    files = [f for f in pred.index if f in labels.index]
+    n = len(files)
     rows = []
+    totals = {"strict": [0, 0, 0], "lenient": [0, 0, 0]}
     for col in CSV_COLUMNS.values():
-        strict = sum(_norm_strict(pred.at[f, col]) == _norm_strict(labels.at[f, col]) for f in common)
-        lenient = sum(_norm_lenient(pred.at[f, col]) == _norm_lenient(labels.at[f, col]) for f in common)
-        n = len(common)
-        rows.append({"Field": col, "Correct (strict)": strict, "Recall (strict)": round(strict / n, 3),
-                     "Correct (lenient)": lenient, "Recall (lenient)": round(lenient / n, 3), "Docs": n})
-    return pd.DataFrame(rows)
+        row = {"Field": col}
+        for mode, norm in (("strict", _norm_strict), ("lenient", _norm_lenient)):
+            c, cn, ne = _count(pred, labels, files, col, norm)
+            r, p, f1 = _scores(c, cn, ne, n)
+            row.update({f"Correct ({mode})": c, f"Recall ({mode})": r,
+                        f"Precision ({mode})": p, f"F1 ({mode})": f1})
+            for i, v in enumerate((c, cn, ne)):
+                totals[mode][i] += v
+        row["Docs"] = n
+        rows.append(row)
+
+    overall = {"Field": "ALL FIELDS (micro)"}
+    for mode in ("strict", "lenient"):
+        c, cn, ne = totals[mode]
+        r, p, f1 = _scores(c, cn, ne, n * len(CSV_COLUMNS))
+        overall.update({f"Correct ({mode})": c, f"Recall ({mode})": r,
+                        f"Precision ({mode})": p, f"F1 ({mode})": f1})
+    overall["Docs"] = n
+    rows.append(overall)
+
+    cols = ["Field", "Correct (strict)", "Recall (strict)", "Precision (strict)", "F1 (strict)",
+            "Correct (lenient)", "Recall (lenient)", "Precision (lenient)", "F1 (lenient)", "Docs"]
+    return pd.DataFrame(rows)[cols]
 
 
 def mismatches(pred: pd.DataFrame, labels: pd.DataFrame) -> pd.DataFrame:

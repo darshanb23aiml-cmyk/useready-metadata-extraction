@@ -20,7 +20,7 @@ No regex, keyword lists or hand-written rules are used. A pretrained LLM reads t
    - `.png`: long scans are cut into a few overlapping slices so that the text stays readable when sent to the model. The slices are sent as images; no separate OCR step is needed.
 2. **Extraction (`src/extractor.py`)** - one LLM call per document (Google Gemini by default, Anthropic Claude optional via `LLM_PROVIDER=claude`), temperature 0, with a JSON schema for the output (`src/schema.py`). The prompt describes the labelling conventions found in the training data (monthly rent rather than deposit, `DD.MM.YYYY` dates, end date = start + term - 1 day, empty renewal notice when absent, names without titles/addresses). These conventions are given to the model as instructions, not coded as rules.
 3. **Why an LLM and not training a model?** Only 10 labelled documents are provided, which is far too few to train or fine-tune a reliable extractor. A pretrained model with a precise prompt generalises across templates.
-4. **Evaluation (`src/evaluate.py`)** - per-field recall = exact matches / documents. A lenient variant (ignores case and extra spaces) is also reported.
+4. **Evaluation (`src/evaluate.py`)** - per-field **recall** = exact matches / documents (the requested metric). Precision and F1 are reported as well. Strict (exact string) and lenient (ignores letter case and extra spaces) versions are saved in `outputs/recall_*.csv`.
 5. **Saved results** - every processed document is stored in `outputs/cache/`, so the results can be reproduced **without an API key or quota** (see below).
 
 ## Project structure
@@ -41,14 +41,14 @@ venv\Scripts\activate            # Windows   (Mac/Linux: source venv/bin/activat
 pip install -r requirements.txt
 ```
 
+Place the provided `data/` folder (train/, test/, train.csv, test.csv) in the project root. It is needed for the batch runs and for the API's lookup of saved results.
+
 Copy `.env.example` to `.env` and add a key (only needed for documents that are not already in `outputs/cache/`):
 
 ```
 GEMINI_API_KEY=your-key        # free key: https://aistudio.google.com
 GEMINI_MODEL=gemini-3.8-flash
 ```
-
-Place the provided `data/` folder (train/, test/, train.csv, test.csv) in the project root. It is needed for the batch runs and for the API's lookup of saved results.
 
 ## Reproduce the predictions
 
@@ -101,33 +101,37 @@ Example response:
 
 ## Results
 
-Model: `gemini-3.8-flash` (Google Gemini API), run on 3 Oct 2026. Metric: per-field recall = exact matches / documents (the lenient column ignores letter case and extra spaces).
+Model: `gemini-3.8-flash` (Google Gemini API), run on 3 Oct 2026.
+
+**Metrics.** *Recall* = exact matches / documents (the metric requested in the assignment; a correctly empty field counts as a match). *Precision* = correct non-empty answers / non-empty answers given (an empty answer means "no answer", so it lowers recall but not precision). *F1* = harmonic mean of precision and recall. The tables below use exact string match; case/space-insensitive scores are in the CSV files.
 
 **Test set (4 documents)** - predictions in `outputs/predictions_test.csv`, scores in `outputs/recall_test.csv`
 
-| Field | Recall (exact match) | Recall (case/space-insensitive) |
-|---|---|---|
-| Agreement Value | 1.00 | 1.00 |
-| Agreement Start Date | 1.00 | 1.00 |
-| Agreement End Date | 0.75 | 0.75 |
-| Renewal Notice (Days) | 1.00 | 1.00 |
-| Party One | 1.00 | 1.00 |
-| Party Two | 0.50 | 0.50 |
+| Field | Recall | Precision | F1 |
+|---|---|---|---|
+| Agreement Value | 1.00 | 1.00 | 1.00 |
+| Agreement Start Date | 1.00 | 1.00 | 1.00 |
+| Agreement End Date | 0.75 | 0.75 | 0.75 |
+| Renewal Notice (Days) | 1.00 | 1.00 | 1.00 |
+| Party One | 1.00 | 1.00 | 1.00 |
+| Party Two | 0.50 | 0.50 | 0.50 |
+| **Overall (all fields)** | **0.875** | **0.875** | **0.875** |
 
-21 of 24 fields are correct (87.5%).
+21 of 24 fields are correct. Precision equals recall here because the system gave an answer for every field.
 
 **Validation on labelled training files** - *partial: 3 of 9 documents processed so far* (the free API quota ran out; see Limitations). Scores in `outputs/recall_train.csv`.
 
-| Field | Recall (3 documents) |
-|---|---|
-| Agreement Value | 0.67 |
-| Agreement Start Date | 0.67 |
-| Agreement End Date | 0.00 |
-| Renewal Notice (Days) | 1.00 |
-| Party One | 0.33 |
-| Party Two | 1.00 |
+| Field | Recall | Precision | F1 |
+|---|---|---|---|
+| Agreement Value | 0.67 | 1.00 | 0.80 |
+| Agreement Start Date | 0.67 | 1.00 | 0.80 |
+| Agreement End Date | 0.00 | 0.00 | 0.00 |
+| Renewal Notice (Days) | 1.00 | 1.00 | 1.00 |
+| Party One | 0.33 | 0.33 | 0.33 |
+| Party Two | 1.00 | 1.00 | 1.00 |
+| **Overall (all fields)** | **0.61** | **0.71** | **0.66** |
 
-With so few documents a single wrong field moves a score by 25 to 33 points, so these numbers are indicative only.
+Precision is higher than recall for Value and Start Date because one document (`44737744`) has an unreadable text layer, and the system returned empty values instead of guessing. With so few documents a single wrong field moves a score by 25 to 33 points, so these numbers are indicative only.
 
 ### Error analysis
 
