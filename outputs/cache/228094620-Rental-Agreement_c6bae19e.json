@@ -1,0 +1,11 @@
+{
+  "model": "gemini-3.8-flash",
+  "fields": {
+    "agreement_value": "15000",
+    "agreement_start_date": "07.07.2013",
+    "agreement_end_date": "06.06.2014",
+    "renewal_notice_days": "30",
+    "party_one": "KAPIL MEHROTRA",
+    "party_two": "B.Kishore"
+  }
+}

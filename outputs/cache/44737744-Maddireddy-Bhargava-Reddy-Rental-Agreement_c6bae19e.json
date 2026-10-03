@@ -1,0 +1,11 @@
+{
+  "model": "gemini-3.8-flash",
+  "fields": {
+    "agreement_value": null,
+    "agreement_start_date": null,
+    "agreement_end_date": null,
+    "renewal_notice_days": null,
+    "party_one": "M. V, V\u00ab VI JAY A SHANKAR",
+    "party_two": "MADDIREDDY BHARGAVA REDDY"
+  }
+}

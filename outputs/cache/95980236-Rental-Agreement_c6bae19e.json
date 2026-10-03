@@ -1,0 +1,11 @@
+{
+  "model": "gemini-3.8-flash",
+  "fields": {
+    "agreement_value": "9000",
+    "agreement_start_date": "01.04.2010",
+    "agreement_end_date": "28.02.2011",
+    "renewal_notice_days": "30",
+    "party_one": "S.Sakunthala",
+    "party_two": "V.V.Ravi Kian"
+  }
+}

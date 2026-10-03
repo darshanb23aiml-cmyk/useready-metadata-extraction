@@ -1,0 +1,7 @@
+Field,Correct (strict),Recall (strict),Correct (lenient),Recall (lenient),Docs
+Aggrement Value,2,0.667,2,0.667,3
+Aggrement Start Date,2,0.667,2,0.667,3
+Aggrement End Date,0,0.0,0,0.0,3
+Renewal Notice (Days),3,1.0,3,1.0,3
+Party One,1,0.333,1,0.333,3
+Party Two,3,1.0,3,1.0,3

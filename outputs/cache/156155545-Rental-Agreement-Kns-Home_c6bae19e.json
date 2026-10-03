@@ -1,0 +1,11 @@
+{
+  "model": "gemini-3.8-flash",
+  "fields": {
+    "agreement_value": "12000",
+    "agreement_start_date": "15.12.2012",
+    "agreement_end_date": "14.11.2013",
+    "renewal_notice_days": "30",
+    "party_one": "V.K.NATARAJ",
+    "party_two": "SRI VYSHNAVI DAIRY SPECIALITIES Private Ltd."
+  }
+}
