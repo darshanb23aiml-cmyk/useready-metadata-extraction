@@ -35,6 +35,8 @@ outputs/    predictions_test.csv, recall_*.csv, cache/
 
 ## Setup
 
+Requires Python 3.10 or newer (developed and tested on Python 3.13).
+
 ```bash
 python -m venv venv
 venv\Scripts\activate            # Windows   (Mac/Linux: source venv/bin/activate)
@@ -57,9 +59,17 @@ python -m src.run --split test     # writes outputs/predictions_test.csv and out
 python -m src.run --split train    # validation on the labelled training files
 ```
 
-Results for the provided files are read from `outputs/cache/` (produced by the model run described below), so this works with **no API key**. A document that is not in the cache needs a key. Free-tier Gemini keys are limited (about 5 requests/minute, 20/day); the code spaces its calls to stay under the per-minute limit and stops cleanly if the daily quota is used up, keeping everything already processed.
+`outputs/cache/` holds the raw model output for each processed document (one JSON file per document), saved during the real model run described under Results. Re-running reads those files instead of calling the API again, so this works with **no API key**. Delete that folder to force fresh model calls (this needs a key). A document that is not in the cache needs a key. Free-tier Gemini keys are limited (about 5 requests/minute, 20/day); the code spaces its calls to stay under the per-minute limit and stops cleanly if the daily quota is used up, keeping everything already processed.
 
-The same steps are available as a notebook: `notebooks/run_pipeline.ipynb`.
+### Run the notebook (optional)
+
+The same steps are available as a notebook that imports the code from `src/`:
+
+```bash
+jupyter lab
+```
+
+Open `notebooks/run_pipeline.ipynb`, select the Python environment where the requirements are installed as the kernel, and choose **Run > Run All Cells** (in VS Code: **Run All**). It works when started from the project root or from the `notebooks/` folder, and it uses the same saved results, so it needs no API key for the provided files. The last cell calls the REST API and only works while the server from the next section is running; otherwise it prints a short message.
 
 ## REST API
 

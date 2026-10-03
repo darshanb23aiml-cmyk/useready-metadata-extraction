@@ -7,8 +7,7 @@ fastapi
 uvicorn
 python-multipart
 pillow
-pytesseract
 jupyterlab
 ipykernel
 requests
-pip install google-genai
+google-genai
