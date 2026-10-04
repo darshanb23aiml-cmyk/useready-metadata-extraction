@@ -1,0 +1,11 @@
+{
+  "model": "gemini-3.8-flash",
+  "fields": {
+    "agreement_value": "6500",
+    "agreement_start_date": "20.05.2007",
+    "agreement_end_date": "20.05.2008",
+    "renewal_notice_days": "15",
+    "party_one": "Antonio Levy S. Ingles. Jr. and/or Mary Rose C. Ingles",
+    "party_two": "GERALDINE O. GALINATO"
+  }
+}

@@ -1,8 +1,8 @@
 Field,Correct (strict),Recall (strict),Precision (strict),F1 (strict),Correct (lenient),Recall (lenient),Precision (lenient),F1 (lenient),Docs
-Aggrement Value,4,0.667,0.8,0.727,4,0.667,0.8,0.727,6
-Aggrement Start Date,4,0.667,0.8,0.727,4,0.667,0.8,0.727,6
-Aggrement End Date,1,0.167,0.2,0.182,1,0.167,0.2,0.182,6
-Renewal Notice (Days),5,0.833,0.8,0.816,5,0.833,0.8,0.816,6
-Party One,3,0.5,0.5,0.5,3,0.5,0.5,0.5,6
-Party Two,5,0.833,0.833,0.833,5,0.833,0.833,0.833,6
-ALL FIELDS (micro),22,0.611,0.656,0.633,22,0.611,0.656,0.633,6
+Aggrement Value,6,0.667,0.75,0.706,6,0.667,0.75,0.706,9
+Aggrement Start Date,6,0.667,0.75,0.706,6,0.667,0.75,0.706,9
+Aggrement End Date,3,0.333,0.375,0.353,3,0.333,0.375,0.353,9
+Renewal Notice (Days),6,0.667,0.714,0.69,6,0.667,0.714,0.69,9
+Party One,3,0.333,0.333,0.333,3,0.333,0.333,0.333,9
+Party Two,5,0.556,0.556,0.556,5,0.556,0.556,0.556,9
+ALL FIELDS (micro),29,0.537,0.571,0.554,29,0.537,0.571,0.554,9
