@@ -1,0 +1,11 @@
+{
+  "model": "gemini-3.8-flash",
+  "fields": {
+    "agreement_value": "5500",
+    "agreement_start_date": "20.04.2011",
+    "agreement_end_date": "19.03.2012",
+    "renewal_notice_days": "60",
+    "party_one": "Asha Ramesh & Ramesh.K.N.",
+    "party_two": "Sadasivuni Deepti & Sadasivuni Kiran"
+  }
+}

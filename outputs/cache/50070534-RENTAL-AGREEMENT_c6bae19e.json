@@ -1,0 +1,11 @@
+{
+  "model": "gemini-3.8-flash",
+  "fields": {
+    "agreement_value": "10000",
+    "agreement_start_date": "01.04.2010",
+    "agreement_end_date": "30.03.2011",
+    "renewal_notice_days": "90",
+    "party_one": "P. JohnsonRavikumar",
+    "party_two": "Saravanan BV"
+  }
+}

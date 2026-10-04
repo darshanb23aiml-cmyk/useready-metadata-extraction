@@ -92,6 +92,10 @@ class QuotaExhausted(RuntimeError):
     """Daily free-tier quota used up on every configured model."""
 
 
+class ModelUnavailable(QuotaExhausted):
+    """The model did not answer after retries (rate limit, overload, ...). Carries the real error text."""
+
+
 LAST_MODEL_USED = None
 
 
@@ -105,6 +109,7 @@ def _extract_gemini(doc: dict) -> AgreementMetadata:
         response_schema=AgreementMetadata,
     )
     models = [m.strip() for m in GEMINI_MODEL.split(",") if m.strip()]
+    last_err = ""
     for model in models:
         if model in _exhausted:
             continue
@@ -120,6 +125,7 @@ def _extract_gemini(doc: dict) -> AgreementMetadata:
             except Exception as e:                # noqa: BLE001
                 msg = str(e)
                 low = msg.lower()
+                last_err = msg
                 if "429" in msg or "resource_exhausted" in low or "quota" in low:
                     if "perday" in low.replace(" ", "").replace("_", ""):
                         print(f"  [daily quota used up for model {model}]")
@@ -131,6 +137,10 @@ def _extract_gemini(doc: dict) -> AgreementMetadata:
                     time.sleep(10 * (attempt + 1))
                     continue
                 raise
+    if not all(m in _exhausted for m in models):
+        raise ModelUnavailable(
+            "The model did not answer after 4 attempts (temporary limit or server busy). "
+            "Last error from Google: " + last_err[:600])
     raise QuotaExhausted(
         "Daily free quota is used up for: " + ", ".join(models) +
         ". Finished documents are cached; run the same command later (or add another "

@@ -129,19 +129,19 @@ Model: `gemini-3.8-flash` (Google Gemini API), run on 3 Oct 2026.
 
 21 of 24 fields are correct. Precision equals recall here because the system gave an answer for every field.
 
-**Validation on labelled training files** - *partial: 3 of 9 documents processed so far* (the free API quota ran out; see Limitations). Scores in `outputs/recall_train.csv`.
+**Validation on labelled training files** - *partial: 6 of 9 labelled documents processed* (the free API quota ran out; see Limitations). Scores use the labels exactly as provided. Files: `outputs/predictions_train.csv`, `outputs/recall_train.csv`.
 
 | Field | Recall | Precision | F1 |
 |---|---|---|---|
-| Agreement Value | 0.67 | 1.00 | 0.80 |
-| Agreement Start Date | 0.67 | 1.00 | 0.80 |
-| Agreement End Date | 0.00 | 0.00 | 0.00 |
-| Renewal Notice (Days) | 1.00 | 1.00 | 1.00 |
-| Party One | 0.33 | 0.33 | 0.33 |
-| Party Two | 1.00 | 1.00 | 1.00 |
-| **Overall (all fields)** | **0.61** | **0.71** | **0.66** |
+| Agreement Value | 0.67 | 0.80 | 0.73 |
+| Agreement Start Date | 0.67 | 0.80 | 0.73 |
+| Agreement End Date | 0.17 | 0.20 | 0.18 |
+| Renewal Notice (Days) | 0.83 | 0.80 | 0.82 |
+| Party One | 0.50 | 0.50 | 0.50 |
+| Party Two | 0.83 | 0.83 | 0.83 |
+| **Overall (all fields)** | **0.61** | **0.66** | **0.63** |
 
-Precision is higher than recall for Value and Start Date because one document (`44737744`) has an unreadable text layer, and the system returned empty values instead of guessing. With so few documents a single wrong field moves a score by 25 to 33 points, so these numbers are indicative only.
+Precision is higher than recall for Value and Start Date because one document (`44737744`) has an unreadable text layer and the system returned empty values instead of guessing. For Renewal Notice, precision is lower than recall because one reference is empty and the system correctly left it empty, which counts for recall but not for precision. With so few documents a single wrong field moves a score by 17 to 33 points, so these numbers are indicative only. Most of the misses come from the reference labels, not the model (see below).
 
 ### Error analysis
 
@@ -150,17 +150,19 @@ Test set:
 - `228094620` (Party Two): the reference is `.B.Kishore` (a leftover dot from removing "Mr" in "Mr.B.Kishore"); the system returned `B.Kishore`.
 - `156155545` (Party Two): the system returned `SRI VYSHNAVI DAIRY SPECIALITIES Private Ltd.`; the reference drops "SRI" and the final period.
 
-Training files processed so far:
-- `18325926`, `36199312` (End Date): the references are not real calendar dates (`31.11.2009`, `31.04.2011`); the system returned real dates for the stated term.
+Training files:
+- **Two labels appear to be swapped (`54770958` and `54945838`).** The scan of `54770958` states rent Rs. 5500, an agreement executed on 20 April 2011, 11 months, two months' notice, lessors Asha Ramesh & Ramesh K.N. and lessees Sadasivuni Deepti & Sadasivuni Kiran, which is what the system returned. The reference values for this file (8000, 01.04.2011 to 31.03.2012, 90 days, K. Parthasarathy / Veerabrahmam Bathini) match the text of the other scan, `54945838` (rent Rs. 8,000, 1 April 2011, twelve months, three months' notice, Prof. K. Parthasarathy and Veerabrahmam Bathini). Six of the misses come from this file. The labels were not altered; the scores above use them as provided. `54945838` has not been processed yet.
+- Several reference end dates are not real calendar dates (`31.11.2009` and `31.02.2011`; `31.04.2011`), while the system returned real dates for the stated term (`18325926`, `47854715`, `36199312`).
 - `18325926` (Party One): the reference keeps the title (`MR.K.Kuttan`); other references drop titles, so the labels are not consistent.
 - `44737744`: this `.docx` is the output of OCR on a scan and its text is unreadable (the rent reads `9.99.7.9°`, the date `.?.??&`; the only embedded images are a stamp/signature). The system returns empty values rather than guessing, so Value, Start Date, End Date and the garbled Party One name do not match.
+- `50070534` was extracted with all six fields matching.
 
 ## Assumptions and limitations
 
-- **Labels are not fully consistent.** Some reference end dates are nominal (`31.11.2009`, `31.04.2011`, `31.02.2011`), and titles are sometimes kept and sometimes removed. Exact matching against such labels cannot reach 100%, and I did not add hand-written rules to imitate them.
+- **Labels are not fully consistent.** Some reference end dates are nominal (`31.11.2009`, `31.04.2011`, `31.02.2011`), titles are sometimes kept and sometimes removed, and the labels of two training files (`54770958`, `54945838`) appear to be swapped. Exact matching against such labels cannot reach 100%, and I did not add hand-written rules to imitate them.
 - **No tuning to the test labels.** The prompt was written from the conventions visible in the training data before the test run; it was not adjusted after seeing test results.
 - **Unreadable inputs return empty values** ("never guess" is part of the prompt), which counts as a miss in recall.
 - **No dataset preprocessing** was needed because no model is trained: documents go to a pretrained LLM, and scoring only trims whitespace.
-- **Free API quota.** The free Gemini tier is limited (about 5 requests/minute and a small daily allowance). The validation run on the training files stopped after 3 documents. Re-running `python -m src.run --split train` after the quota resets processes the remaining files; finished documents are reused from `outputs/cache/`.
+- **Free API quota.** The free Gemini tier is limited (about 5 requests/minute and a small daily allowance). The validation run on the training files stopped after 6 of the 9 labelled documents; `54945838`, `6683127` and `6683129` are not processed yet. Re-running `python -m src.run --split train` after the quota resets processes them; finished documents are reused from `outputs/cache/`.
 - **New documents need a working LLM key.** Documents already processed are served from the saved results; anything else needs `GEMINI_API_KEY` (or `ANTHROPIC_API_KEY` with `LLM_PROVIDER=claude`) in `.env`. Without one, the API returns `503` with an explanatory message.
 - `24158401-Rental-Agreement` is listed in `train.csv` but its document is in `test/`; it is scored once. `46239065-Standard-Rental-Agreement...docx` in `train/` has no label and is skipped.
